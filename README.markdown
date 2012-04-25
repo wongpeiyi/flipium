@@ -1,4 +1,4 @@
-Flipium
+FLIPIUM
 =======
 
 Introducion
@@ -27,24 +27,26 @@ The following properties can be passed as a single object to the createFlipView(
 * horizontal: Set to true for horizontal flipping (default = false)
 * startPage: FlipView will flip to this page on load (default = 1)
 * path: Specify path to the folder containing your images
-* cacheOnLoad: By default, Flipium will crop and cache your images into flippable pages and save them in the ApplicationDataDirectory. If set to false, Flipium will expect each page to already be separated into two equally-sized images, with filenames in the format: "img_1_t.png" and "img_1_b.png" for top-bottom flipping, or "img_1_l.png" and "img_1_r.png" for left-right flipping.
+* cacheOnLoad: By default, Flipium will crop and cache your images into flippable pages and save them in the ApplicationDataDirectory. If set to false, Flipium will expect each page to already be separated into two equally-sized images, with filenames in the format: "img_1_t.png" and "img_1_b.png" for top-bottom flipping, or "img_1_l.png" and "img_1_r.png" for left-right flipping (default = true)
 
 
+DragView Configuration
+----------------------
 
-AVAILABLE OPTIONS FOR DRAGVIEW:
-  dragDistance: 230
-  dragThreshold: 0.5
-  initialDrag: 10
-  tapThreshold: 5
-  topLimit: 0.7
-  bottomLimit: 0.3
+The following properties can be passed as a single object to the createDragView() function:
 
-CACHING:
-  If cacheOnLoad is true, images will be split and cached on load.
-  Set to false if you are splitting images yourself and specifying
-  a path to the split images folder. 
-  Call flipview.cacheImages() to manually cache images.
+* dragDistance: The distance in pixels/points the user has to drag to manually flip a page (default = 230)
+* dragThreshold: After manually flipping a page past this percentage, the page will continue to flip over (default = 0.5)
+* initialDrag: The minimum distance in pixels/points the user has to drag before the page starts manually flipping (default = 10)
+* tapThreshold: The maximum (accidental) distance in pixels/points the user can drag in order for the gesture to be considered a tap (default = 5)
+* topLimit: When the user tries to flip to a previous page but is at the start limit, the page will stop flipping at this percentage (default = 0.7)
+* bottomLimit: When the user tries to flip to a next page but is at the end limit, the page will stop flipping at this percentage (default = 0.3)
 
-CLICKING:
-  To handle click events on the dragView, add an event listener for
-  "tap" instead of "click", as the latter will disable gestures.
+Caching
+-------
+If cacheOnLoad is true, images will be split and cached on load. Set to false if you are splitting images yourself and specifying a path to the split images folder. Call flipview.cacheImages() to manually cache images.
+
+Clicking
+--------
+To handle click events on the dragView, add an event listener for "tap" instead of "click", as the latter will disable gestures.
+
