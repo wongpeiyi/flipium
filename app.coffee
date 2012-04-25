@@ -579,13 +579,11 @@ createDragView = (ff, opt={}) ->
 
 fv = createFlipView
   images: ["1.png", "2.png", "3.png"]
-  horizontal: true
+  horizontal: false
   path: "/example/"
   cacheOnLoad: true
   duration: 500
-  distance: 888
   height: 460
-  offsetTop: 0
 
 dv = createDragView(fv)
 
