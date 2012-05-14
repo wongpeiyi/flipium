@@ -41,8 +41,8 @@
         } else {
           this.reset = Ti.UI.iOS.create3DMatrix();
           this.reset.setM34(-1 / this.distance);
-          this.flipUp = this.reset.rotate(Math.pow(-1, this.hh) * 90, this.vv, this.hh, 0);
-          this.flipBackUp = this.reset.rotate(-Math.pow(-1, this.hh) * 90, this.vv, this.hh, 0);
+          this.flipUp = this.reset.rotate(Math.pow(-1, this.hh) * 89.9, this.vv, this.hh, 0);
+          this.flipBackUp = this.reset.rotate(-Math.pow(-1, this.hh) * 89.9, this.vv, this.hh, 0);
           this.flipDown = this.reset;
         }
         if (Ti.App.Properties.getBool("FlipCached", false)) {
@@ -449,7 +449,7 @@
             duration: 1
           });
         } else {
-          dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * this.y * 180, ff.vv, ff.hh, 0);
+          dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * y * 180, ff.vv, ff.hh, 0);
           this.wrap.animate({
             transform: dragMatrix,
             duration: 1

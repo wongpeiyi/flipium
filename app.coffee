@@ -52,8 +52,8 @@ createFlipView = (opt={}) ->
       else
         @reset = Ti.UI.iOS.create3DMatrix()
         @reset.setM34 -1/@distance
-        @flipUp     = @reset.rotate(Math.pow(-1, @hh)*90, @vv, @hh, 0)
-        @flipBackUp = @reset.rotate(-Math.pow(-1, @hh)*90, @vv, @hh, 0)
+        @flipUp     = @reset.rotate(Math.pow(-1, @hh)*89.9, @vv, @hh, 0)
+        @flipBackUp = @reset.rotate(-Math.pow(-1, @hh)*89.9, @vv, @hh, 0)
         @flipDown   = @reset
         
       # ========================================================================= #
@@ -430,7 +430,7 @@ createFlipper = (index, ff) ->
       if ff.android 
         @wrap.animate { opacity: 1, duration: 1 }
       else
-        dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*@y*180, ff.vv, ff.hh, 0)
+        dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*y*180, ff.vv, ff.hh, 0)
         @wrap.animate { transform: dragMatrix, duration: 1 }
 
       @flipping = null
