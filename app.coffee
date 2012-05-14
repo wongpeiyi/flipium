@@ -51,10 +51,10 @@ createFlipView = (opt={}) ->
         @flipAround   = @reset.scale(Math.pow(-1, @hh), Math.pow(-1, @vv))
       else
         @reset = Ti.UI.iOS.create3DMatrix()
-        @flipAround = @reset.rotate(Math.pow(-1, @hh)*180, @vv, @hh, 0)
         @reset.setM34 -1/@distance
         @flipUp     = @reset.rotate(Math.pow(-1, @hh)*90, @vv, @hh, 0)
-        @flipDown   = @reset.rotate(Math.pow(-1, @hh)*180, @vv, @hh, 0)
+        @flipBackUp = @reset.rotate(-Math.pow(-1, @hh)*90, @vv, @hh, 0)
+        @flipDown   = @reset
         
       # ========================================================================= #
       #   FLIPPERS                                                                #
@@ -78,10 +78,9 @@ createFlipView = (opt={}) ->
       @add flippers[i] for i in [(flippers.length-1)..0] # Reverse hack for android
 
       # Set flipper 0
-      @flippers[0].wrap.transform = @flipDown
       @flippers[0].swapImg()
+      @flippers[0].wrap.transform = @flipDown
       @flippers[0].shadow.opacity = 0
-      @flippers[0].img_t2x.show() unless @android
       
       @totalPages = @images.length
       
@@ -197,14 +196,6 @@ createFlipper = (index, ff) ->
       top: 0
       left: 0
     
-    img_t2x: unless ff.android then Ti.UI.createImageView
-      image: ff.path + "img_#{index+1}_#{if ff.hh then "l" else "t"}.png"
-      width: ff.width /(1+ff.hh)
-      height: ff.height /(1+ff.vv)
-      top: 0
-      left: 0
-      zIndex: index + 1
-
     wrap: Ti.UI.createView
       width: ff.width /(1+ff.hh)
       height: ff.height /(1+ff.vv)
@@ -248,10 +239,10 @@ createFlipper = (index, ff) ->
         transform: ff.flipDown
         curve: Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT unless ff.android
       @flipBackUpAnim = Ti.UI.createAnimation
-        transform: if ff.android then ff.flipBackUp else ff.flipUp
+        transform: ff.flipBackUp
         curve: Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT unless ff.android
       @flipBackDownAnim = Ti.UI.createAnimation
-        transform: if ff.android then ff.flipBackDown else ff.reset
+        transform: if ff.android then ff.flipBackDown else ff.flipDown
         curve: Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT unless ff.android
       @shadowOutAnim = Ti.UI.createAnimation
         opacity: 0
@@ -288,8 +279,6 @@ createFlipper = (index, ff) ->
         @darken.opacity = 0
         @shadow.opacity = 0
         @swapImg() if not @flipped
-        if not ff.android && not ff.dragging && ff.flipping == 0
-          @img_t2x.show() 
 
       @flipBackDownAnim.addEventListener "complete", =>
         ff.flipping -= 1
@@ -297,20 +286,13 @@ createFlipper = (index, ff) ->
         @darken.opacity = 0
         @swapImg(true) if @flipped
         @prev().darken.opacity = 0 if @prev()
-        if @prev() && not ff.android && not ff.dragging && ff.flipping == 0
-          @prev().img_t2x.show()
         
       # ========================================================================= #
       #   ADD ELEMENTS                                                            #
       # ========================================================================= #
 
       @wrap.add @img_t
-      @img_t.transform = ff.flipAround unless ff.android
       @img_t.visible = false
-
-      unless ff.android
-        @add @img_t2x
-        @img_t2x.hide()
 
       @wrap.add @img_b
       @wrap.add @darken
@@ -402,10 +384,18 @@ createFlipper = (index, ff) ->
         @img_t.visible = false
         @img_b.visible = true
         if ff.android
-          @img_t.transform = @reset
+          @img_t.transform = ff.reset
           @img_t.top = 0
           @img_t.left = 0
+        else
+          @wrap.anchorPoint = if ff.hh then { x: 0, y: 0.5 } else { x: 0.5, y: 0 }
+          @wrap.transform = ff.flipUp
+          if ff.hh
+            @wrap.left = ff.width/2
+          else
+            @wrap.top = ff.height/2          
         @zIndex = -@index
+        
       else
         @img_t.visible = true
         @img_b.visible = false
@@ -415,6 +405,13 @@ createFlipper = (index, ff) ->
             @img_t.left = ff.width/2
           else
             @img_t.top = ff.height/2
+        else
+          @wrap.anchorPoint = if ff.hh then { x: 1, y: 0.5 } else { x: 0.5, y: 1 }
+          @wrap.transform = ff.flipBackUp
+          if ff.hh
+            @wrap.left = 0
+          else
+            @wrap.top = 0
         @zIndex = @index
       @flipped = !reverse 
       
@@ -495,10 +492,6 @@ createDragView = (ff, opt={}) ->
             if @flipper.flipping
               y = @flipper.stopFlipping()
               @startY = (y - (@dir == "down")) * @dragDistance + ey
-
-            unless ff.android
-              @flipper.img_t2x.hide()
-              @flipper.prev().img_t2x.hide() if @flipper.prev()
       
             @_y = ey
 
@@ -532,7 +525,10 @@ createDragView = (ff, opt={}) ->
             @flipper.darken.opacity = 0.08-0.32*Math.pow(@y-0.5,2)
             @flipper.shadow.opacity = if @y <= 0.5 then 2.27*Math.pow(0.5-@y, 1.6) else 0
             @flipper.prev().darken.opacity = (if @y >= 0.5 then 2.27*Math.pow(@y-0.5, 1.6) else 0) if @flipper.prev()
-            dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*@y*180, ff.vv, ff.hh, 0)  
+            if @y < 0.5
+              dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*@y*180, ff.vv, ff.hh, 0)  
+            else
+              dragMatrix = ff.reset.rotate(-Math.pow(-1, ff.hh)*(1-@y)*180, ff.vv, ff.hh, 0)              
           @flipper.wrap.transform = dragMatrix
     
           # Flip image over or back
@@ -570,10 +566,6 @@ createDragView = (ff, opt={}) ->
           @inertia = ff.dragging = false
           @y = 0
           @dir = null
-
-          if ff.flipping == 0 && not ff.android
-            @flipper.img_t2x.show()          
-
                 
       return this
   

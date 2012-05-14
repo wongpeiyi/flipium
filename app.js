@@ -40,10 +40,10 @@
           this.flipAround = this.reset.scale(Math.pow(-1, this.hh), Math.pow(-1, this.vv));
         } else {
           this.reset = Ti.UI.iOS.create3DMatrix();
-          this.flipAround = this.reset.rotate(Math.pow(-1, this.hh) * 180, this.vv, this.hh, 0);
           this.reset.setM34(-1 / this.distance);
           this.flipUp = this.reset.rotate(Math.pow(-1, this.hh) * 90, this.vv, this.hh, 0);
-          this.flipDown = this.reset.rotate(Math.pow(-1, this.hh) * 180, this.vv, this.hh, 0);
+          this.flipBackUp = this.reset.rotate(-Math.pow(-1, this.hh) * 90, this.vv, this.hh, 0);
+          this.flipDown = this.reset;
         }
         if (Ti.App.Properties.getBool("FlipCached", false)) {
           Ti.API.info("Reading flipcache");
@@ -65,10 +65,9 @@
         for (i = _ref2 = flippers.length - 1; _ref2 <= 0 ? i <= 0 : i >= 0; _ref2 <= 0 ? i++ : i--) {
           this.add(flippers[i]);
         }
-        this.flippers[0].wrap.transform = this.flipDown;
         this.flippers[0].swapImg();
+        this.flippers[0].wrap.transform = this.flipDown;
         this.flippers[0].shadow.opacity = 0;
-        if (!this.android) this.flippers[0].img_t2x.show();
         this.totalPages = this.images.length;
         flipToStartPage = function() {
           if (_this.currentPage < _this.startPage) {
@@ -174,14 +173,6 @@
         top: 0,
         left: 0
       }),
-      img_t2x: !ff.android ? Ti.UI.createImageView({
-        image: ff.path + ("img_" + (index + 1) + "_" + (ff.hh ? "l" : "t") + ".png"),
-        width: ff.width / (1 + ff.hh),
-        height: ff.height / (1 + ff.vv),
-        top: 0,
-        left: 0,
-        zIndex: index + 1
-      }) : void 0,
       wrap: Ti.UI.createView({
         width: ff.width / (1 + ff.hh),
         height: ff.height / (1 + ff.vv),
@@ -228,11 +219,11 @@
           curve: !ff.android ? Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT : void 0
         });
         this.flipBackUpAnim = Ti.UI.createAnimation({
-          transform: ff.android ? ff.flipBackUp : ff.flipUp,
+          transform: ff.flipBackUp,
           curve: !ff.android ? Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT : void 0
         });
         this.flipBackDownAnim = Ti.UI.createAnimation({
-          transform: ff.android ? ff.flipBackDown : ff.reset,
+          transform: ff.android ? ff.flipBackDown : ff.flipDown,
           curve: !ff.android ? Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT : void 0
         });
         this.shadowOutAnim = Ti.UI.createAnimation({
@@ -270,28 +261,17 @@
           _this.flipping = null;
           _this.darken.opacity = 0;
           _this.shadow.opacity = 0;
-          if (!_this.flipped) _this.swapImg();
-          if (!ff.android && !ff.dragging && ff.flipping === 0) {
-            return _this.img_t2x.show();
-          }
+          if (!_this.flipped) return _this.swapImg();
         });
         this.flipBackDownAnim.addEventListener("complete", function() {
           ff.flipping -= 1;
           _this.flipping = null;
           _this.darken.opacity = 0;
           if (_this.flipped) _this.swapImg(true);
-          if (_this.prev()) _this.prev().darken.opacity = 0;
-          if (_this.prev() && !ff.android && !ff.dragging && ff.flipping === 0) {
-            return _this.prev().img_t2x.show();
-          }
+          if (_this.prev()) return _this.prev().darken.opacity = 0;
         });
         this.wrap.add(this.img_t);
-        if (!ff.android) this.img_t.transform = ff.flipAround;
         this.img_t.visible = false;
-        if (!ff.android) {
-          this.add(this.img_t2x);
-          this.img_t2x.hide();
-        }
         this.wrap.add(this.img_b);
         this.wrap.add(this.darken);
         this.add(this.shadow);
@@ -391,9 +371,23 @@
           this.img_t.visible = false;
           this.img_b.visible = true;
           if (ff.android) {
-            this.img_t.transform = this.reset;
+            this.img_t.transform = ff.reset;
             this.img_t.top = 0;
             this.img_t.left = 0;
+          } else {
+            this.wrap.anchorPoint = ff.hh ? {
+              x: 0,
+              y: 0.5
+            } : {
+              x: 0.5,
+              y: 0
+            };
+            this.wrap.transform = ff.flipUp;
+            if (ff.hh) {
+              this.wrap.left = ff.width / 2;
+            } else {
+              this.wrap.top = ff.height / 2;
+            }
           }
           this.zIndex = -this.index;
         } else {
@@ -405,6 +399,20 @@
               this.img_t.left = ff.width / 2;
             } else {
               this.img_t.top = ff.height / 2;
+            }
+          } else {
+            this.wrap.anchorPoint = ff.hh ? {
+              x: 1,
+              y: 0.5
+            } : {
+              x: 0.5,
+              y: 1
+            };
+            this.wrap.transform = ff.flipBackUp;
+            if (ff.hh) {
+              this.wrap.left = 0;
+            } else {
+              this.wrap.top = 0;
             }
           }
           this.zIndex = this.index;
@@ -497,10 +505,6 @@
                 y = this.flipper.stopFlipping();
                 this.startY = (y - (this.dir === "down")) * this.dragDistance + ey;
               }
-              if (!ff.android) {
-                this.flipper.img_t2x.hide();
-                if (this.flipper.prev()) this.flipper.prev().img_t2x.hide();
-              }
               this._y = ey;
             }
           }
@@ -541,7 +545,11 @@
               if (this.flipper.prev()) {
                 this.flipper.prev().darken.opacity = (this.y >= 0.5 ? 2.27 * Math.pow(this.y - 0.5, 1.6) : 0);
               }
-              dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * this.y * 180, ff.vv, ff.hh, 0);
+              if (this.y < 0.5) {
+                dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * this.y * 180, ff.vv, ff.hh, 0);
+              } else {
+                dragMatrix = ff.reset.rotate(-Math.pow(-1, ff.hh) * (1 - this.y) * 180, ff.vv, ff.hh, 0);
+              }
             }
             this.flipper.wrap.transform = dragMatrix;
             if (this.y > 0.5 && !this.flipper.flipped) {
@@ -576,10 +584,7 @@
             }
             this.inertia = ff.dragging = false;
             this.y = 0;
-            this.dir = null;
-            if (ff.flipping === 0 && !ff.android) {
-              return this.flipper.img_t2x.show();
-            }
+            return this.dir = null;
           }
         });
         return this;
