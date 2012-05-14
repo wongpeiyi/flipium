@@ -420,23 +420,26 @@
         return this.flipped = !reverse;
       },
       stopFlipping: function() {
-        var dragMatrix, y;
+        var darken_to, dragMatrix, prev_to, shadow_to, y;
         if (this.flipped) {
           y = ff.android ? 0.8 : 0.7;
         } else {
           y = ff.android ? 0.2 : 0.3;
         }
+        darken_to = 0.08 - 0.32 * Math.pow(y - 0.5, 2);
+        shadow_to = y <= 0.5 ? 2.27 * Math.pow(0.5 - y, 1.6) : 0;
+        prev_to = y >= 0.5 ? 2.27 * Math.pow(y - 0.5, 1.6) : 0;
         this.darken.animate({
-          opacity: 0.08 - 0.32 * Math.pow(y - 0.5, 2),
+          opacity: darken_to,
           duration: 1
         });
         this.shadow.animate({
-          opacity: (y <= 0.5 ? 2.27 * Math.pow(0.5 - y, 1.6) : void 0),
+          opacity: shadow_to,
           duration: 1
         });
         if (this.prev()) {
           this.prev().darken.animate({
-            opacity: (y >= 0.5 ? 2.27 * Math.pow(y - 0.5, 1.6) : 0),
+            opacity: prev_to,
             duration: 1
           });
         }
@@ -488,7 +491,7 @@
           return ff.dragging = true;
         });
         this.addEventListener("touchmove", function(e) {
-          var dragMatrix, ex, ey, storeY, y,
+          var darken_to, dragMatrix, ex, ey, prev_to, shadow_to, storeY, y,
             _this = this;
           ey = ff.hh ? e.x : e.y;
           ex = ff.hh ? e.y : e.x;
@@ -522,6 +525,9 @@
               return _this._y = ey;
             };
             this.timer = setTimeout(storeY, 200);
+            darken_to = 0.08 - 0.32 * Math.pow(this.y - 0.5, 2);
+            shadow_to = this.y <= 0.5 ? 2.27 * Math.pow(0.5 - this.y, 1.6) : 0;
+            prev_to = this.y >= 0.5 ? 2.27 * Math.pow(this.y - 0.5, 1.6) : 0;
             if (ff.android) {
               if (ff.hh) {
                 dragMatrix = ff.reset.scale(1 - 2 * this.y, 1);
@@ -529,21 +535,21 @@
                 dragMatrix = ff.reset.scale(1, 1 - 2 * this.y);
               }
               this.flipper.darken.animate({
-                opacity: -0.4 * Math.pow(this.y, 2) + 0.4 * this.y
+                opacity: darken_to
               });
               this.flipper.shadow.animate({
-                opacity: this.y <= 0.5 ? 2.27 * Math.pow(0.5 - this.y, 1.6) : 00
+                opacity: shadow_to
               });
               if (this.flipper.prev()) {
                 this.flipper.prev().darken.animate({
-                  opacity: this.y >= 0.5 ? 2.27 * Math.pow(this.y - 0.5, 1.6) : 0
+                  opacity: prev_to
                 });
               }
             } else {
-              this.flipper.darken.opacity = 0.08 - 0.32 * Math.pow(this.y - 0.5, 2);
-              this.flipper.shadow.opacity = this.y <= 0.5 ? 2.27 * Math.pow(0.5 - this.y, 1.6) : 0;
+              this.flipper.darken.opacity = darken_to;
+              this.flipper.shadow.opacity = shadow_to;
               if (this.flipper.prev()) {
-                this.flipper.prev().darken.opacity = (this.y >= 0.5 ? 2.27 * Math.pow(this.y - 0.5, 1.6) : 0);
+                this.flipper.prev().darken.opacity = prev_to;
               }
               if (this.y < 0.5) {
                 dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * this.y * 180, ff.vv, ff.hh, 0);

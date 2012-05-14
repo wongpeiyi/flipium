@@ -420,9 +420,12 @@ createFlipper = (index, ff) ->
         y = if ff.android then 0.8 else 0.7
       else
         y = if ff.android then 0.2 else 0.3
-      @darken.animate { opacity: 0.08-0.32*Math.pow(y-0.5,2), duration: 1 }
-      @shadow.animate { opacity: (if y <= 0.5 then 2.27*Math.pow(0.5-y, 1.6)), duration: 1 }
-      @prev().darken.animate { opacity: (if y >= 0.5 then 2.27*Math.pow(y-0.5, 1.6) else 0), duration: 1 } if @prev()
+      darken_to = 0.08 - 0.32*Math.pow(y-0.5, 2)
+      shadow_to = if y <= 0.5 then 2.27*Math.pow(0.5-y, 1.6) else 0
+      prev_to = if y >= 0.5 then 2.27*Math.pow(y-0.5, 1.6) else 0
+      @darken.animate { opacity: darken_to, duration: 1 }
+      @shadow.animate { opacity: shadow_to, duration: 1 }
+      @prev().darken.animate { opacity: prev_to, duration: 1 } if @prev()
 
       if ff.android 
         @wrap.animate { opacity: 1, duration: 1 }
@@ -511,20 +514,22 @@ createDragView = (ff, opt={}) ->
             @_y = ey
           @timer = setTimeout(storeY, 200)
       
-          # Rotate flipper      
+          # Rotate flipper
+          darken_to = 0.08-0.32*Math.pow(@y-0.5,2)
+          shadow_to = if @y <= 0.5 then 2.27*Math.pow(0.5-@y, 1.6) else 0
+          prev_to = if @y >= 0.5 then 2.27*Math.pow(@y-0.5, 1.6) else 0
           if ff.android
             if ff.hh
               dragMatrix = ff.reset.scale(1-2*@y, 1)
             else
               dragMatrix = ff.reset.scale(1, 1-2*@y)            
-            @flipper.darken.animate { opacity: -0.4*Math.pow(@y,2) + 0.4*@y }
-            @flipper.shadow.animate { opacity: if @y <= 0.5 then 2.27*Math.pow(0.5-@y, 1.6) else 00 }
-            if @flipper.prev()
-              @flipper.prev().darken.animate { opacity: if @y >= 0.5 then 2.27*Math.pow(@y-0.5, 1.6) else 0 }
+            @flipper.darken.animate { opacity: darken_to }
+            @flipper.shadow.animate { opacity: shadow_to }
+            @flipper.prev().darken.animate { opacity: prev_to } if @flipper.prev()
           else
-            @flipper.darken.opacity = 0.08-0.32*Math.pow(@y-0.5,2)
-            @flipper.shadow.opacity = if @y <= 0.5 then 2.27*Math.pow(0.5-@y, 1.6) else 0
-            @flipper.prev().darken.opacity = (if @y >= 0.5 then 2.27*Math.pow(@y-0.5, 1.6) else 0) if @flipper.prev()
+            @flipper.darken.opacity = darken_to
+            @flipper.shadow.opacity = shadow_to
+            @flipper.prev().darken.opacity = prev_to if @flipper.prev()
             if @y < 0.5
               dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*@y*180, ff.vv, ff.hh, 0)  
             else
