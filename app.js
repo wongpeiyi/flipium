@@ -159,6 +159,7 @@
       top: ff.offsetTop,
       left: ff.offsetLeft,
       zIndex: -index,
+      flipping: 0,
       img_b: Ti.UI.createImageView({
         image: ff.path + ("img_" + index + "_" + (ff.hh ? "r" : "b") + ".png"),
         width: ff.width / (1 + ff.hh),
@@ -244,30 +245,30 @@
         });
         this.flipUpAnim.addEventListener("complete", function() {
           ff.flipping -= 1;
-          if (_this.flipping === "forward") {
+          _this.flipping -= 1;
+          if (_this.flipping === 0) {
             if (!_this.flipped) _this.swapImg();
             return _this.flip(0.5);
           }
         });
         this.flipBackUpAnim.addEventListener("complete", function() {
           ff.flipping -= 1;
-          if (_this.flipping === "back") {
+          _this.flipping -= 1;
+          if (_this.flipping === 0) {
             if (_this.flipped) _this.swapImg(true);
             return _this.flip(0.5, true);
           }
         });
         this.flipDownAnim.addEventListener("complete", function() {
           ff.flipping -= 1;
-          _this.flipping = null;
+          _this.flipping -= 1;
           _this.darken.opacity = 0;
-          _this.shadow.opacity = 0;
-          if (!_this.flipped) return _this.swapImg();
+          return _this.shadow.opacity = 0;
         });
         this.flipBackDownAnim.addEventListener("complete", function() {
           ff.flipping -= 1;
-          _this.flipping = null;
+          _this.flipping -= 1;
           _this.darken.opacity = 0;
-          if (_this.flipped) _this.swapImg(true);
           if (_this.prev()) return _this.prev().darken.opacity = 0;
         });
         this.wrap.add(this.img_t);
@@ -363,8 +364,8 @@
           this.shadow.animate(this.shadowInAnim);
           this.darken.animate(this.darkenOutAnim);
         }
-        this.flipping = reverse ? "back" : "forward";
-        return ff.flipping += 1;
+        ff.flipping += 1;
+        return this.flipping += 1;
       },
       swapImg: function(reverse) {
         if (reverse) {
@@ -449,13 +450,16 @@
             duration: 1
           });
         } else {
-          dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * y * 180, ff.vv, ff.hh, 0);
+          if (y < 0.5) {
+            dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * y * 180, ff.vv, ff.hh, 0);
+          } else {
+            dragMatrix = ff.reset.rotate(-Math.pow(-1, ff.hh) * (1 - y) * 180, ff.vv, ff.hh, 0);
+          }
           this.wrap.animate({
             transform: dragMatrix,
             duration: 1
           });
         }
-        this.flipping = null;
         return y;
       }
     });
@@ -504,10 +508,11 @@
                 this.dir = "up";
                 this.flipper = ff.current();
               }
-              if (this.flipper.flipping) {
+              if (this.flipper.flipping > 0) {
                 y = this.flipper.stopFlipping();
                 this.startY = (y - (this.dir === "down")) * this.dragDistance + ey;
               }
+              this.flipper.flipping += 1;
               this._y = ey;
             }
           }
@@ -588,6 +593,7 @@
               this.flipper.flip(this.y, true);
               ff.currentPage -= this.dir === "down";
             }
+            this.flipper.flipping -= 1;
             this.inertia = ff.dragging = false;
             this.y = 0;
             return this.dir = null;

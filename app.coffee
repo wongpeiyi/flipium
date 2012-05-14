@@ -177,6 +177,7 @@ createFlipper = (index, ff) ->
     top: ff.offsetTop
     left: ff.offsetLeft
     zIndex: -index
+    flipping: 0
 
   # ========================================================================= #
   #   ELEMENTS                                                                #
@@ -263,28 +264,28 @@ createFlipper = (index, ff) ->
 
       @flipUpAnim.addEventListener "complete", =>
         ff.flipping -= 1
-        if @flipping == "forward"
-          @swapImg() unless @flipped
+        @flipping -= 1
+        if @flipping == 0
+          @swapImg() if not @flipped
           @flip(0.5)
       
       @flipBackUpAnim.addEventListener "complete", =>
         ff.flipping -= 1
-        if @flipping == "back"
+        @flipping -= 1
+        if @flipping == 0
           @swapImg(true) if @flipped
           @flip(0.5, true)
         
       @flipDownAnim.addEventListener "complete", =>
         ff.flipping -= 1
-        @flipping = null
+        @flipping -= 1
         @darken.opacity = 0
         @shadow.opacity = 0
-        @swapImg() if not @flipped
 
       @flipBackDownAnim.addEventListener "complete", =>
         ff.flipping -= 1
-        @flipping = null
+        @flipping -= 1
         @darken.opacity = 0
-        @swapImg(true) if @flipped
         @prev().darken.opacity = 0 if @prev()
         
       # ========================================================================= #
@@ -375,9 +376,9 @@ createFlipper = (index, ff) ->
         @shadow.animate @shadowInAnim
         @darken.animate @darkenOutAnim
         
-
-      @flipping = if reverse then "back" else "forward"
       ff.flipping += 1
+      @flipping += 1
+      
     
     swapImg: (reverse) ->
       if reverse 
@@ -430,10 +431,12 @@ createFlipper = (index, ff) ->
       if ff.android 
         @wrap.animate { opacity: 1, duration: 1 }
       else
-        dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*y*180, ff.vv, ff.hh, 0)
+        if y < 0.5
+          dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*y*180, ff.vv, ff.hh, 0)  
+        else
+          dragMatrix = ff.reset.rotate(-Math.pow(-1, ff.hh)*(1-y)*180, ff.vv, ff.hh, 0)              
         @wrap.animate { transform: dragMatrix, duration: 1 }
 
-      @flipping = null
       return y
 
   return flipper.construct()
@@ -492,9 +495,11 @@ createDragView = (ff, opt={}) ->
               @flipper = ff.current()
       
             # Stop flip
-            if @flipper.flipping
+            if @flipper.flipping > 0
               y = @flipper.stopFlipping()
               @startY = (y - (@dir == "down")) * @dragDistance + ey
+
+            @flipper.flipping += 1
       
             @_y = ey
 
@@ -568,6 +573,8 @@ createDragView = (ff, opt={}) ->
             @flipper.flip(@y, true)
             ff.currentPage -= (@dir == "down")
                       
+          @flipper.flipping -= 1
+
           @inertia = ff.dragging = false
           @y = 0
           @dir = null
