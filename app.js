@@ -13,6 +13,7 @@
       iphone: Ti.Platform.osname === "iphone",
       android: Ti.Platform.osname === "android",
       duration: 500,
+      wholeDuration: true,
       horizontal: false,
       images: [],
       startPage: 1,
@@ -239,7 +240,7 @@
           curve: !ff.android ? Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT : void 0
         });
         this.shadowInAnim = Ti.UI.createAnimation({
-          opacity: 0.6,
+          opacity: 0.75,
           curve: !ff.android ? Ti.UI.iOS.ANIMATION_CURVE_EASE_IN : void 0
         });
         this.darkenOutAnim = Ti.UI.createAnimation({
@@ -247,7 +248,7 @@
           curve: !ff.android ? Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT : void 0
         });
         this.darkenInAnim = Ti.UI.createAnimation({
-          opacity: 0.1,
+          opacity: 0.08,
           curve: !ff.android ? Ti.UI.iOS.ANIMATION_CURVE_EASE_IN : void 0
         });
         this.flipUpAnim.addEventListener("complete", function() {
@@ -300,14 +301,15 @@
       flip: function(y, reverse) {
         var dur;
         if (ff.android) {
-          this.shadow.opacity = y <= 0.5 ? 0.6 - 2.4 * Math.pow(y, 2) : 0;
-          this.darken.opacity = -0.4 * Math.pow(y, 2) + 0.4 * y;
+          this.shadow.opacity = y <= 0.5 ? 0.6 - 3 * Math.pow(y, 2) : 0;
+          this.darken.opacity = 0.08 - 0.32 * Math.pow(y - 0.5, 2);
           if (this.prev()) {
-            this.prev().darken.opacity = y >= 0.5 ? 2.4 * Math.pow(y - 0.5, 2) : 0;
+            this.prev().darken.opacity = y >= 0.5 ? 3 * Math.pow(y - 0.5, 2) : 0;
           }
         }
         if (y < 0.5 && !reverse) {
-          dur = this.duration / 2 * (1 - Math.pow(2 * y, 0.625));
+          dur = this.duration / 2;
+          dur = dur * (1 - Math.pow(2 * y, 0.625));
           if (ff.android) {
             this.flipUpAnim.transform = ff.reset.scale(1 - 2 * y * ff.hh, 1 - 2 * y * ff.vv, ff.vv, ff.hh);
           }
@@ -318,8 +320,11 @@
           this.shadow.animate(this.shadowOutAnim);
           this.darken.animate(this.darkenInAnim);
         } else if (y >= 0.5 && !reverse) {
-          dur = this.duration / 2 * (1 - Math.pow(2 * y - 1, 0.625));
-          if (this.index === 0) dur = dur * 2;
+          dur = this.duration / 2;
+          if (!ff.wholeDuration) {
+            dur = dur * (1 - Math.pow(2 * y - 1, 0.625));
+            if (this.index === 0) dur = dur * 2;
+          }
           if (ff.android) {
             this.flipDownAnim.transform = ff.reset.scale(1 - 2 * y * ff.hh, 1 - 2 * y * ff.vv, Math.pow(-1, ff.hh), Math.pow(-1, ff.vv));
           }
@@ -363,8 +368,11 @@
             }
           }
         } else if (y <= 0.5 && reverse) {
-          dur = this.duration / 2 * Math.pow(2 * y, 0.625);
-          if (this.index === ff.totalPages) dur = dur * 2;
+          dur = this.duration / 2;
+          if (!ff.wholeDuration) {
+            dur = dur * Math.pow(2 * y, 0.625);
+            if (this.index === ff.totalPages) dur = dur * 2;
+          }
           if (ff.android) {
             this.flipBackDownAnim.transform = ff.reset.scale(1 - 2 * y * ff.hh, 1 - 2 * y * ff.vv, 1, 1);
           }
@@ -411,16 +419,16 @@
           y = ff.android ? 0.2 : 0.3;
         }
         this.darken.animate({
-          opacity: -0.4 * Math.pow(y, 2) + 0.4 * y,
+          opacity: 0.08 - 0.32 * Math.pow(y - 0.5, 2),
           duration: 1
         });
         this.shadow.animate({
-          opacity: (y <= 0.5 ? 1.82 * Math.pow(0.5 - y, 1.6) : void 0),
+          opacity: (y <= 0.5 ? 2.27 * Math.pow(0.5 - y, 1.6) : void 0),
           duration: 1
         });
         if (this.prev()) {
           this.prev().darken.animate({
-            opacity: (y >= 0.5 ? 1.82 * Math.pow(y - 0.5, 1.6) : 0),
+            opacity: (y >= 0.5 ? 2.27 * Math.pow(y - 0.5, 1.6) : 0),
             duration: 1
           });
         }
@@ -477,7 +485,7 @@
           ey = ff.hh ? e.x : e.y;
           ex = ff.hh ? e.y : e.x;
           if (Math.abs(this.startY - ey) > this.initialDrag && !this.dir) {
-            if (Math.abs(this.startX - ex) < Math.abs(this.startY - ey)) {
+            if (Math.abs(this.startX - ex) < 1.2 * Math.abs(this.startY - ey)) {
               if (ey > this.startY) {
                 this.dir = "down";
                 this.flipper = ff.prev();
@@ -520,18 +528,18 @@
                 opacity: -0.4 * Math.pow(this.y, 2) + 0.4 * this.y
               });
               this.flipper.shadow.animate({
-                opacity: this.y <= 0.5 ? 1.82 * Math.pow(0.5 - this.y, 1.6) : 00
+                opacity: this.y <= 0.5 ? 2.27 * Math.pow(0.5 - this.y, 1.6) : 00
               });
               if (this.flipper.prev()) {
                 this.flipper.prev().darken.animate({
-                  opacity: this.y >= 0.5 ? 1.82 * Math.pow(this.y - 0.5, 1.6) : 0
+                  opacity: this.y >= 0.5 ? 2.27 * Math.pow(this.y - 0.5, 1.6) : 0
                 });
               }
             } else {
-              this.flipper.darken.opacity = -0.4 * Math.pow(this.y, 2) + 0.4 * this.y;
-              this.flipper.shadow.opacity = this.y <= 0.5 ? 1.82 * Math.pow(0.5 - this.y, 1.6) : 0;
+              this.flipper.darken.opacity = 0.08 - 0.32 * Math.pow(this.y - 0.5, 2);
+              this.flipper.shadow.opacity = this.y <= 0.5 ? 2.27 * Math.pow(0.5 - this.y, 1.6) : 0;
               if (this.flipper.prev()) {
-                this.flipper.prev().darken.opacity = (this.y >= 0.5 ? 1.82 * Math.pow(this.y - 0.5, 1.6) : 0);
+                this.flipper.prev().darken.opacity = (this.y >= 0.5 ? 2.27 * Math.pow(this.y - 0.5, 1.6) : 0);
               }
               dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh) * this.y * 180, ff.vv, ff.hh, 0);
             }

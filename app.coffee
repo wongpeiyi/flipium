@@ -17,12 +17,15 @@ createFlipView = (opt={}) ->
     android: (Ti.Platform.osname == "android")
     
     duration: 500
+    wholeDuration: true
+    
     horizontal: false
     images: []
     startPage: 1
     path: "" 
     cacheOnLoad: false
     distance: 1000
+    
     offsetTop: 0
     offsetLeft: 0
         
@@ -254,13 +257,13 @@ createFlipper = (index, ff) ->
         opacity: 0
         curve: Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT unless ff.android
       @shadowInAnim = Ti.UI.createAnimation
-        opacity: 0.6
+        opacity: 0.75
         curve: Ti.UI.iOS.ANIMATION_CURVE_EASE_IN unless ff.android
       @darkenOutAnim = Ti.UI.createAnimation
         opacity: 0
         curve: Ti.UI.iOS.ANIMATION_CURVE_EASE_OUT unless ff.android
       @darkenInAnim = Ti.UI.createAnimation
-        opacity: 0.1
+        opacity: 0.08
         curve: Ti.UI.iOS.ANIMATION_CURVE_EASE_IN unless ff.android
          
       # ========================================================================= #
@@ -322,14 +325,15 @@ createFlipper = (index, ff) ->
 
     flip: (y, reverse) ->
       if ff.android
-        @shadow.opacity = if y <= 0.5 then 0.6 - 2.4*Math.pow(y, 2) else 0
-        @darken.opacity = -0.4*Math.pow(y, 2) + 0.4*y
+        @shadow.opacity = if y <= 0.5 then 0.6 - 3*Math.pow(y, 2) else 0
+        @darken.opacity = 0.08-0.32*Math.pow(y-0.5, 2)
         if @prev()
-          @prev().darken.opacity = if y >= 0.5 then 2.4*Math.pow(y-0.5, 2) else 0
+          @prev().darken.opacity = if y >= 0.5 then 3*Math.pow(y-0.5, 2) else 0
               
       if y < 0.5 && not reverse
         # Flip up
-        dur = @duration / 2 * (1 - Math.pow(2*y, 0.625))
+        dur = @duration / 2
+        dur = dur * (1 - Math.pow(2*y, 0.625))
         if ff.android
           @flipUpAnim.transform = ff.reset.scale(1-2*y*ff.hh, 1-2*y*ff.vv, ff.vv, ff.hh)
         @flipUpAnim.duration    = dur
@@ -341,8 +345,10 @@ createFlipper = (index, ff) ->
             
       else if y >= 0.5 && not reverse
         # Flip down
-        dur = @duration / 2 * (1 - Math.pow(2*y-1, 0.625))
-        dur = dur * 2 if @index == 0
+        dur = @duration / 2 
+        unless ff.wholeDuration
+          dur = dur * (1 - Math.pow(2*y-1, 0.625))
+          dur = dur * 2 if @index == 0
         if ff.android
           @flipDownAnim.transform = ff.reset.scale(1-2*y*ff.hh, 1-2*y*ff.vv, Math.pow(-1, ff.hh), Math.pow(-1, ff.vv))          
         @flipDownAnim.duration  = dur
@@ -374,8 +380,10 @@ createFlipper = (index, ff) ->
       
       else if y <= 0.5 && reverse
         # Flip back down
-        dur = @duration / 2 * Math.pow(2*y, 0.625)
-        dur = dur * 2 if @index == ff.totalPages
+        dur = @duration / 2 
+        unless ff.wholeDuration
+          dur = dur * Math.pow(2*y, 0.625)
+          dur = dur * 2 if @index == ff.totalPages
         if ff.android
           @flipBackDownAnim.transform = ff.reset.scale(1-2*y*ff.hh, 1-2*y*ff.vv, 1, 1)        
         @flipBackDownAnim.duration = dur
@@ -415,9 +423,9 @@ createFlipper = (index, ff) ->
         y = if ff.android then 0.8 else 0.7
       else
         y = if ff.android then 0.2 else 0.3
-      @darken.animate { opacity: -0.4*Math.pow(y,2) + 0.4*y, duration: 1 }
-      @shadow.animate { opacity: (if y <= 0.5 then 1.82*Math.pow(0.5-y, 1.6)), duration: 1 }
-      @prev().darken.animate { opacity: (if y >= 0.5 then 1.82*Math.pow(y-0.5, 1.6) else 0), duration: 1 } if @prev()
+      @darken.animate { opacity: 0.08-0.32*Math.pow(y-0.5,2), duration: 1 }
+      @shadow.animate { opacity: (if y <= 0.5 then 2.27*Math.pow(0.5-y, 1.6)), duration: 1 }
+      @prev().darken.animate { opacity: (if y >= 0.5 then 2.27*Math.pow(y-0.5, 1.6) else 0), duration: 1 } if @prev()
 
       if ff.android 
         @wrap.animate { opacity: 1, duration: 1 }
@@ -475,7 +483,7 @@ createDragView = (ff, opt={}) ->
         
         # Target a flipper
         if Math.abs(@startY - ey) > @initialDrag && not @dir
-          if Math.abs(@startX - ex) < Math.abs(@startY - ey)
+          if Math.abs(@startX - ex) < 1.2 * Math.abs(@startY - ey)
             if ey > @startY
               @dir = "down"
               @flipper = ff.prev()
@@ -517,13 +525,13 @@ createDragView = (ff, opt={}) ->
             else
               dragMatrix = ff.reset.scale(1, 1-2*@y)            
             @flipper.darken.animate { opacity: -0.4*Math.pow(@y,2) + 0.4*@y }
-            @flipper.shadow.animate { opacity: if @y <= 0.5 then 1.82*Math.pow(0.5-@y, 1.6) else 00 }
+            @flipper.shadow.animate { opacity: if @y <= 0.5 then 2.27*Math.pow(0.5-@y, 1.6) else 00 }
             if @flipper.prev()
-              @flipper.prev().darken.animate { opacity: if @y >= 0.5 then 1.82*Math.pow(@y-0.5, 1.6) else 0 }
+              @flipper.prev().darken.animate { opacity: if @y >= 0.5 then 2.27*Math.pow(@y-0.5, 1.6) else 0 }
           else
-            @flipper.darken.opacity = -0.4*Math.pow(@y,2) + 0.4*@y
-            @flipper.shadow.opacity = if @y <= 0.5 then 1.82*Math.pow(0.5-@y, 1.6) else 0
-            @flipper.prev().darken.opacity = (if @y >= 0.5 then 1.82*Math.pow(@y-0.5, 1.6) else 0) if @flipper.prev()
+            @flipper.darken.opacity = 0.08-0.32*Math.pow(@y-0.5,2)
+            @flipper.shadow.opacity = if @y <= 0.5 then 2.27*Math.pow(0.5-@y, 1.6) else 0
+            @flipper.prev().darken.opacity = (if @y >= 0.5 then 2.27*Math.pow(@y-0.5, 1.6) else 0) if @flipper.prev()
             dragMatrix = ff.reset.rotate(Math.pow(-1, ff.hh)*@y*180, ff.vv, ff.hh, 0)  
           @flipper.wrap.transform = dragMatrix
     
