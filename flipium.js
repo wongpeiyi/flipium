@@ -1,7 +1,9 @@
 (function() {
-  var createDragView, createFlipView, createFlipper, dv, fv, win;
+  var Flipium;
 
-  createFlipView = function(opt) {
+  Flipium = {};
+
+  Flipium.createFlipView = function(opt) {
     var flipView;
     if (opt == null) opt = {};
     flipView = Ti.UI.createView({
@@ -55,11 +57,11 @@
         } else {
           Ti.API.info("Loading from " + this.path);
         }
-        flippers = [createFlipper(0, this)];
+        flippers = [Flipium.createFlipper(0, this)];
         _ref = this.images;
         for (i = 0, _len = _ref.length; i < _len; i++) {
           image = _ref[i];
-          flippers.push(createFlipper(i + 1, this));
+          flippers.push(Flipium.createFlipper(i + 1, this));
         }
         this.flippers = flippers;
         for (i = _ref2 = flippers.length - 1; _ref2 <= 0 ? i <= 0 : i >= 0; _ref2 <= 0 ? i++ : i--) {
@@ -151,7 +153,7 @@
     return flipView.construct();
   };
 
-  createFlipper = function(index, ff) {
+  Flipium.createFlipper = function(index, ff) {
     var flipper;
     flipper = Ti.UI.createView({
       width: ff.width,
@@ -466,7 +468,7 @@
     return flipper.construct();
   };
 
-  createDragView = function(ff, opt) {
+  Flipium.createDragView = function(ff, opt) {
     var dragView;
     if (opt == null) opt = {};
     dragView = Ti.UI.createView({
@@ -605,27 +607,6 @@
     return dragView.construct();
   };
 
-  fv = createFlipView({
-    images: ["1.png", "2.png", "3.png"],
-    horizontal: false,
-    path: "/example/",
-    cacheOnLoad: true,
-    duration: 500,
-    height: 460
-  });
-
-  dv = createDragView(fv);
-
-  win = Ti.UI.createWindow({
-    backgroundColor: "#fff",
-    backgroundImage: "bg.jpg",
-    navBarHidden: true
-  });
-
-  win.add(fv);
-
-  win.add(dv);
-
-  win.open();
+  module.exports = Flipium;
 
 }).call(this);

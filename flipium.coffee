@@ -4,7 +4,9 @@
 #                                                                           #
 # ========================================================================= #  
 
-createFlipView = (opt={}) ->
+Flipium = {}
+
+Flipium.createFlipView = (opt={}) ->
   
   flipView = Ti.UI.createView
     width: 320
@@ -72,8 +74,8 @@ createFlipView = (opt={}) ->
         Ti.API.info "Loading from #{@path}"        
 
       # Create flippers
-      flippers = [createFlipper(0, this)]
-      flippers.push createFlipper(i+1, this) for image, i in @images  
+      flippers = [Flipium.createFlipper(0, this)]
+      flippers.push Flipium.createFlipper(i+1, this) for image, i in @images  
       @flippers = flippers
       @add flippers[i] for i in [(flippers.length-1)..0] # Reverse hack for android
 
@@ -169,7 +171,7 @@ createFlipView = (opt={}) ->
 #                                                                           #
 # ========================================================================= #  
 
-createFlipper = (index, ff) ->
+Flipium.createFlipper = (index, ff) ->
 
   flipper = Ti.UI.createView
     width: ff.width
@@ -448,7 +450,7 @@ createFlipper = (index, ff) ->
 #                                                                           #
 # ========================================================================= #  
 
-createDragView = (ff, opt={}) ->
+Flipium.createDragView = (ff, opt={}) ->
 
   dragView = Ti.UI.createView
     width: ff.width
@@ -582,29 +584,5 @@ createDragView = (ff, opt={}) ->
       return this
   
   return dragView.construct()
-    
 
-  
-# ========================================================================= #
-#   EXAMPLE APP                                                             #
-# ========================================================================= #
-
-fv = createFlipView
-  images: ["1.png", "2.png", "3.png"]
-  horizontal: false
-  path: "/example/"
-  cacheOnLoad: true
-  duration: 500
-  height: 460
-
-dv = createDragView(fv)
-
-win = Ti.UI.createWindow
-  backgroundColor: "#fff"
-  backgroundImage: "bg.jpg"  
-  navBarHidden: true
-
-win.add fv
-win.add dv
-win.open()
-
+module.exports = Flipium

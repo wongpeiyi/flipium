@@ -10,7 +10,10 @@ Flipium provides Titanium Appcelerator UI elements to simulate Flipboard's page-
 Basic Usage
 -----------
 
-There are two main functions to call: createFlipView() and createDragView()
+First, add the following line to your app.js:
+`var Flipium = require("flipium");`
+
+You then have two main functions to call: Flipium.createFlipView() and Flipium.createDragView()
 
 createFlipView() creates an Ti.UI.View object that contains all your images as flippable pages.
 
